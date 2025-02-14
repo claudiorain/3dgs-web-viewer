@@ -3,6 +3,9 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import Tres from '@tresjs/core'
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+
 // Vuetify
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
@@ -23,5 +26,8 @@ app.use(createPinia())
 app.use(router)
 app.use(Tres)
 app.use(vuetify)
+app.use(VueAxios, axios)
 
 app.mount('#app')
+
+

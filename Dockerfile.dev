@@ -1,0 +1,20 @@
+# Usa l'immagine ufficiale di Node.js
+FROM node:18-alpine
+
+# Imposta la directory di lavoro
+WORKDIR /app
+
+# Copia i file package.json e package-lock.json per ottimizzare la cache
+COPY package.json package-lock.json ./
+
+# Installa le dipendenze globalmente per evitare problemi con npm not found
+RUN npm install -g npm && npm install
+
+# Copia il resto dell'applicazione
+COPY . .
+
+# Espone la porta di Vite (5173)
+EXPOSE 5173
+
+# Comando di default per eseguire Vite
+ENTRYPOINT [ "npm", "run", "dev", "--", "--host" ]

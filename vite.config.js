@@ -34,4 +34,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    host: true, // Permette di accedere da un host esterno (Docker)
+    watch: {
+      usePolling: true, // Risolve problemi di hot reload in Docker
+    },
+  },
 })
