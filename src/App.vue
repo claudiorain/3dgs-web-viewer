@@ -7,6 +7,11 @@ import { RouterView } from 'vue-router'
 </template>
 
 <style scoped>
+html, body, div, canvas {
+    margin: 0;
+    padding: 0;
+}
+
 header {
   line-height: 1.5;
   max-height: 100vh;
