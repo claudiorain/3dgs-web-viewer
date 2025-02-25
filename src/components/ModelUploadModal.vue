@@ -1,14 +1,14 @@
 <template>
   <v-dialog :model-value="modelValue" max-width="500px">
     <v-card>
-      <v-card-title class="text-h5">Carica un nuovo modello</v-card-title>
+      <v-card-title class="text-h5">Load a new model</v-card-title>
       <v-card-text>
-        <v-text-field v-model="title" label="Titolo"></v-text-field>
-        <input type="file" @change="handleFileChange" accept="video/*" />
+        <v-text-field v-model="title" label="Title"></v-text-field>
+        <input type="file" @change="handleFileChange" accept="video/*" lang="en"/>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="close">Annulla</v-btn>
-        <v-btn :loading="loading" @click="submit">Salva</v-btn>
+        <v-btn @click="close">Cancel</v-btn>
+        <v-btn :loading="loading" @click="submit">Save</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -36,7 +36,7 @@ const handleFileChange = async (event) => {
 
 const submit = async () => {
   if (!selectedFile.value || !title.value) {
-    alert("Seleziona un file e inserisci un titolo!");
+    alert("Select a file and insert a title!");
     return;
   }
 

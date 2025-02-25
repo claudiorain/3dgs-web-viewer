@@ -9,7 +9,8 @@ export const useModelStore = defineStore("model", {
     loading: false, // Stato di caricamento
     search: '', // Ricerca attiva
     page: 1, // Pagina attuale
-    totalPages: 1, // Totale delle pagine (per la paginazione)
+    totalCount: -1,
+    pageCount: 1, // Totale delle pagine (per la paginazione)
     itemsPerPage: 9, // Numero di modelli per pagina
   }),
 
@@ -66,7 +67,8 @@ export const useModelStore = defineStore("model", {
           model_name: this.search,
         });
         this.models = response.models; // Popola la lista dei modelli
-        this.totalPages = response.totalPages; // Calcola il totale delle pagine
+        this.pageCount = response.totalPages; // Calcola il totale delle pagine
+        this.totalCount = response.totalCount; // Calcola il totale dei modelli
       } catch (error) {
         console.error('Errore durante il recupero dei modelli:', error);
       } finally {
@@ -81,7 +83,7 @@ export const useModelStore = defineStore("model", {
           modelId: this.modelId
         });
         this.models = response.models; // Popola la lista dei modelli
-        this.totalPages = response.totalPages; // Calcola il totale delle pagine
+        this.pageCount = response.totalPages; // Calcola il totale delle pagine
       } catch (error) {
         console.error('Errore durante il recupero dei modelli:', error);
       } finally {
@@ -96,11 +98,6 @@ export const useModelStore = defineStore("model", {
       this.fetchModels(); // Ricarica i modelli
     },
 
-    // Funzione per cambiare pagina
-    changePage(newPage) {
-      this.page = newPage;
-      this.fetchModels(); // Ricarica i modelli per la nuova pagina
-    },
 
     async downloadZipModel(modelId) {
       try {

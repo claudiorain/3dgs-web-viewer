@@ -1,10 +1,9 @@
-import axios from "axios";
+import {serverApi,s3Api} from './baseApi';
 
-const API_BASE_URL = "http://localhost:8000"; // Cambia con l'URL corretto
 
 export const getPresignedUploadUrl = async (filename, contentType) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/s3/upload-url/`, {
+    const response = await serverApi.post(`/s3/upload-url/`, {
       filename,
       content_type: contentType,
     });
@@ -17,7 +16,7 @@ export const getPresignedUploadUrl = async (filename, contentType) => {
 
 export const createModel = async (modelData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/models/`, modelData);
+    const response = await serverApi.post(`/models/`, modelData);
     return response.data; // Modello creato
   } catch (error) {
     console.error("Errore nella creazione del modello:", error);
@@ -27,7 +26,7 @@ export const createModel = async (modelData) => {
 
 export const uploadToS3 = async (uploadUrl, file) => {
   try {
-    await axios.put(uploadUrl, file, {
+    await s3Api.put(uploadUrl, file, {
       headers: { "Content-Type": file.type },
     });
     return true;
@@ -40,7 +39,7 @@ export const uploadToS3 = async (uploadUrl, file) => {
 // Gestisci le chiamate GET per ottenere i modelli
 export const getModels = async ({ page = 1, limit = 10, title = '', status = [] }) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/models`, {
+    const response = await serverApi.get('/models', {
       params: {
         page,
         limit,
@@ -58,7 +57,7 @@ export const getModels = async ({ page = 1, limit = 10, title = '', status = [] 
 // Gestisci la chiamata GET per ottenere il modello
 export const getModel = async ( modelId ) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/models/${modelId}`);
+    const response = await serverApi.get(`/models/${modelId}`);
     return response.data; // Restituisce i dati ricevuti dal backend
   } catch (error) {
     console.error('Errore durante la chiamata API:', error);
@@ -69,7 +68,7 @@ export const getModel = async ( modelId ) => {
 
 export const getPresignedDownloadUrl = async (modelId,resourceName) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/models/${modelId}/${resourceName}/s3/download-url`)
+    const response = await serverApi.get(`/models/${modelId}/${resourceName}/s3/download-url`)
     return response.data
   } catch (error) {
     console.error('Errore nel recupero del presigned URL:', error)
