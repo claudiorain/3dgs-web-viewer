@@ -60,14 +60,8 @@ onMounted(async () => {
   let camerasData = null;
 
   for (const fileName in zip.files) {
-    /*  if (fileName.startsWith('point_cloud/iteration_30000/') && fileName === 'point_cloud/iteration_30000/point_cloud.ply') {
-        plyFileData = await zip.files[fileName].async('arraybuffer') // Ottieni i dati del file come ArrayBuffer
-
-        // Converti il Blob in un URL temporaneo
-        break
-      }*/
-    if (fileName.startsWith('point_cloud/iteration_30000/') && fileName === 'point_cloud/iteration_30000/point_cloud.ply') {
-      const plyFileBlob = await zip.files['point_cloud/iteration_30000/point_cloud.ply'].async('blob');
+    if (fileName === 'point_cloud.splat') {
+      const plyFileBlob = await zip.files['point_cloud.splat'].async('blob');
       plyData = await plyFileBlob.arrayBuffer();
 
     }

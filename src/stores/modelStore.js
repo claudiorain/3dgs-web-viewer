@@ -4,7 +4,7 @@ import { getPresignedUploadUrl, uploadToS3, createModel,getModels,getModel,getPr
 export const useModelStore = defineStore("model", {
   state: () => ({
     models: [],
-    presignedUrlData: null, // Dati ricevuti dal server (model_id, upload_url, video_uri)
+    presignedUrlData: null, // Dati ricevuti dal server (model_id, upload_url, video_s3_key)
     error: null,
     loading: false, // Stato di caricamento
     search: '', // Ricerca attiva
@@ -12,6 +12,7 @@ export const useModelStore = defineStore("model", {
     totalCount: -1,
     pageCount: 1, // Totale delle pagine (per la paginazione)
     itemsPerPage: 9, // Numero di modelli per pagina
+    selectedModel: null
   }),
 
   actions: {
@@ -40,15 +41,17 @@ export const useModelStore = defineStore("model", {
       }
     },
 
-    async saveModel(title) {
+    async saveModel(title,description,engine) {
       if (!this.presignedUrlData) {
         throw new Error("Nessun dato del modello disponibile!");
       }
       try {
         const modelData = {
           model_id: this.presignedUrlData.model_id,
-          video_uri: this.presignedUrlData.video_uri,
+          video_s3_key: this.presignedUrlData.video_s3_key,
           title,
+          description,
+          engine
         };
         const newModel = await createModel(modelData);
         this.models.push(newModel);
@@ -102,16 +105,32 @@ export const useModelStore = defineStore("model", {
     async downloadZipModel(modelId) {
       try {
         const response = await getModel(modelId)
+        this.selectedModel = response
         this.downloadUrl = response.output_url
     
         // Scaricare il file ZIP con Fetch API
         const zipResponse = await fetch(this.downloadUrl)
-        const zipBlob = await zipResponse.blob()
-    
-        return zipBlob // Restituisce il file ZIP
+
+        if (!zipResponse.ok) {
+          throw new Error('Errore nel download del file, risposta non valida');
+        }
+        
+      // Ora converte il Blob in un ArrayBuffer (necessario per JSZip)
+        const zip = await zipResponse.arrayBuffer();
+        return zip // Restituisce il file ZIP
       } catch (error) {
         console.error('Errore nel recupero del download URL:', error)
       }
+    },
+
+    setSearchParams(params) {
+      this.searchParams = params;
+    },
+    getSearchParams() {
+      return this.searchParams || {lastPage: 1,lastItemsPerPage:9,lastSearch: ''};
+    },
+    setSelectedModel(model) {
+      this.selectedModel = model;
     },
 
     

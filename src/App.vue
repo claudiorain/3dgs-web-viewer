@@ -1,9 +1,7 @@
 <template>
   <v-row justify="end" >
     <v-col cols="12">
-      <v-btn v-if="isLoggedIn" color="error" class="ml-4" @click="doLogout">
-        Logout
-      </v-btn>
+      
     </v-col>
   </v-row>
   <!-- Mostra il pulsante logout solo se l'utente è loggato -->
@@ -14,27 +12,7 @@
 </template>
 
 <script setup>
-import { RouterView, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/authStore'; // Importa il nostro store Pinia
-import { storeToRefs } from 'pinia';
-import { computed } from 'vue'
-
-const store = useAuthStore(); // Crea l'istanza dello store
-
-// Stato per verificare se l'utente è loggato (simulato)
-const router = useRouter()
-
-const { token } = storeToRefs(store);
-const { logout } = store;
-
-const doLogout = () => {
-  logout()
-  // Reindirizza alla pagina di login
-  router.push('/login')
-}
-
-// Computed property che verifica se l'utente è loggato
-const isLoggedIn = computed(() => !!token.value) // ✅ REATTIVO
+import { RouterView } from 'vue-router'
 
 // Computed property che combina firstName e lastName
 </script>

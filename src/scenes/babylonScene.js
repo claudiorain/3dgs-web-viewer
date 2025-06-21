@@ -3,19 +3,8 @@ import { Color4, Vector3, Matrix, Quaternion, ArcRotateCamera, HemisphericLight 
 import { SPLATFileLoader } from "@babylonjs/loaders/SPLAT"
 
 
-const loadScene = async (canvas, engine,scene, pointCloudData, camerasData) => {
+const loadScene = async (canvas, engine, scene, pointCloudData, camerasData) => {
   scene.clearColor = new Color4(0, 0, 0, 1); // Nero opaco (RGBA)
-
-  // Usa il primo set di dati della telecamera per configurare la scena
-  const cameraData = camerasData[Math.floor(Math.random() * camerasData.length)]; // Se hai più di una telecamera, puoi selezionare quella che ti serve
-  // Posizione della telecamera
-  const position = new Vector3(
-    cameraData.position[0],  // X rimane invariato
-    cameraData.position[2],  // Scambio Y <-> Z
-    -cameraData.position[1]  // Inverto Y
-  );
-
-
 
   // Creazione della telecamera
   const camera = new ArcRotateCamera(
@@ -27,32 +16,41 @@ const loadScene = async (canvas, engine,scene, pointCloudData, camerasData) => {
     scene
   );
 
-  // Imposta la posizione della telecamera
-  camera.position = position;
+  // Usa il primo set di dati della telecamera per configurare la scena
+  if (camerasData) {
+    const cameraData = camerasData[Math.floor(Math.random() * camerasData.length)]; // Se hai più di una telecamera, puoi selezionare quella che ti serve
+    // Posizione della telecamera
+    const position = new Vector3(
+      cameraData.position[0],  // X rimane invariato
+      cameraData.position[2],  // Scambio Y <-> Z
+      -cameraData.position[1]  // Inverto Y
+    );
+    // Imposta la posizione della telecamera
+    camera.position = position;
 
-  // Creazione della matrice di rotazione a partire dalla matrice 3x3 fornita
-  const rotationMatrix = new Matrix(
-    cameraData.rotation[0][0], cameraData.rotation[0][1], cameraData.rotation[0][2], 0,
-    cameraData.rotation[1][0], cameraData.rotation[1][1], cameraData.rotation[1][2], 0,
-    cameraData.rotation[2][0], cameraData.rotation[2][1], cameraData.rotation[2][2], 0,
-    0, 0, 0, 1
-  );
+    // Creazione della matrice di rotazione a partire dalla matrice 3x3 fornita
+    const rotationMatrix = new Matrix(
+      cameraData.rotation[0][0], cameraData.rotation[0][1], cameraData.rotation[0][2], 0,
+      cameraData.rotation[1][0], cameraData.rotation[1][1], cameraData.rotation[1][2], 0,
+      cameraData.rotation[2][0], cameraData.rotation[2][1], cameraData.rotation[2][2], 0,
+      0, 0, 0, 1
+    );
 
-  // Applicazione della rotazione alla telecamera
-  const quaternion = Quaternion.FromRotationMatrix(rotationMatrix);
-  // Imposta la rotazione della telecamera usando il quaternion
-  camera.rotationQuaternion = quaternion;
+    // Applicazione della rotazione alla telecamera
+    const quaternion = Quaternion.FromRotationMatrix(rotationMatrix);
+    // Imposta la rotazione della telecamera usando il quaternion
+    camera.rotationQuaternion = quaternion;
 
-  // Calcola il FOV dal dataset
-  let fovY = 2 * Math.atan(cameraData.height / (2 * cameraData.fy));
+    // Calcola il FOV dal dataset
+    let fovY = 2 * Math.atan(cameraData.height / (2 * cameraData.fy));
 
-  // Correggi il FOV manualmente se necessario
-  const fovCorrectionFactor = 1.5; // 🔥 Questo valore lo regoli sperimentalmente
-  fovY *= fovCorrectionFactor;
+    // Correggi il FOV manualmente se necessario
+    const fovCorrectionFactor = 1.5; // 🔥 Questo valore lo regoli sperimentalmente
+    fovY *= fovCorrectionFactor;
 
-  camera.fov = fovY; // Imposta il nuovo FOV sulla camera
+    camera.fov = fovY; // Imposta il nuovo FOV sulla camera
 
-
+  }
 
   camera.attachControl(canvas, true);
   new HemisphericLight("light", new Vector3(1, 1, 0), scene);

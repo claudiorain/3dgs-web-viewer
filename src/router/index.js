@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
-import ModelView from '@/views/ModelView.vue'
+import BabylonJsModelView from '@/views/BabylonJsModelView.vue'
+import ThreeJsModelView from '@/views/ThreeJsModelView.vue'
 import { useAuthStore } from '@/stores/authStore';
 
 
@@ -15,7 +16,8 @@ const router = createRouter({
       component: HomeView,
       meta: { requiresAuth: true }
     },
-    { path: '/model/:id', component: ModelView },
+    { path: '/model/babylonjs/:id', component: BabylonJsModelView },
+    { path: '/model/threejs/:id', component: ThreeJsModelView },
     { path: '/login', component: () => import('@/views/LoginView.vue') },
   ],
 })

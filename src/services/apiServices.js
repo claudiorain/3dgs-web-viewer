@@ -7,7 +7,7 @@ export const getPresignedUploadUrl = async (filename, contentType) => {
       filename,
       content_type: contentType,
     });
-    return response.data; // { model_id, upload_url, video_uri }
+    return response.data; // { model_id, upload_url, video_s3_key }
   } catch (error) {
     console.error("Errore nel recupero del presigned URL:", error);
     throw error;

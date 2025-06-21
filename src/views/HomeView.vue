@@ -1,16 +1,15 @@
 <template>
+  <v-btn v-if="isLoggedIn" color="error" class="ml-4" @click="doLogout">
+    Logout
+  </v-btn>
   <v-card>
     <div v-if="loading" class="d-flex justify-center align-center my-4">
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
-    
 
-    
-    <v-data-iterator 
-      :items="models" 
-      :items-per-page.sync="itemsPerPage" 
-      :search="search" 
-      :page.sync="page">
+
+
+    <v-data-iterator :items="models" :items-per-page="itemsPerPage" :search="search">
       <template v-slot:header>
         <v-toolbar class="px-2">
           <v-text-field v-model="search" density="comfortable" placeholder="Search" prepend-inner-icon="mdi-magnify"
@@ -38,23 +37,66 @@
           <v-row dense>
             <v-col v-for="item in items" :key="item.raw._id" cols="auto" md="4">
               <v-card class="pb-3" border flat>
-                <v-img lazy-src="/assets/16px_upscaled.png" aspect-ratio="16/9" max-height="125" cover :src="item.raw.thumbnail_url"
-                  crossorigin="anonymous"></v-img>
-                <v-list-item class="mb-2">
-                  <template v-slot:title>
-                    <strong class="text-h6 mb-2">{{ item.raw.title }}</strong>
-                  </template>
-                </v-list-item>
+                <v-img lazy-src="/assets/16px_upscaled.png" min-height="200" max-height="250" aspect-ratio="16/9" cover
+                  :src="item.raw.thumbnail_url" crossorigin="anonymous" class="model-image">
+                  <v-container >
+                    <v-row dense>
+                      <v-col cols="6" align="left">
+                        <v-chip color="white"  variant="flat">
+                          <span class="text-grey-darken-2 font-weight-medium">{{ item.raw.engine }}</span>
+                        </v-chip>
+                      </v-col>
+                      <v-col cols="6" align="right">
+                        <v-chip color="white" :class="statusColor(item.raw.status)" variant="flat">
+                          <v-icon size="36">mdi-circle-small</v-icon>
+                          <span>{{ statusText(item.raw.status) }}</span>
+                        </v-chip>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-img>
 
-                <div class="d-flex justify-space-between align-center px-4">
-                  <v-chip :color="statusColor(item.raw.status)" class="me-2">
-                    {{ statusText(item.raw.status) }}
-                  </v-chip>
-
-                  <v-btn v-if="item.raw.output_url" color="primary" @click="$router.push('/model/' + item.raw._id)">
-                    3D Model
+                <v-card-title>
+                  <strong class="text-h5 mb-2 font-weight-medium">{{ item.raw.title }}</strong>
+                </v-card-title>
+                <v-card-actions>
+                  <!-- <v-btn v-if="item.raw.output_url" color="primary"
+                    @click="$router.push('/model/babylonjs/' + item.raw._id)">
+                    BabylonJs 3D View
+                  </v-btn> -->
+                  <v-btn v-if="item.raw.output_url" density="comfortable" color="secondary" rounded="lg" size="x-large"
+                    variant="flat" @click="goTo3DView(item.raw)" prepend-icon="mdi-rotate-3d">
+                    View
                   </v-btn>
-                </div>
+                </v-card-actions>
+                <v-divider v-if="item.raw.results"></v-divider>
+                <v-card-actions v-if="item.raw.results">
+                  <v-btn text="Quality metrics"></v-btn>
+
+                  <v-spacer></v-spacer>
+
+                  <v-btn :icon="show[item.raw._id] ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                    @click="show[item.raw._id] = !show[item.raw._id]"></v-btn>
+                </v-card-actions>
+                <v-expand-transition v-if="item.raw.results">
+                  <div v-show="show[item.raw._id]">
+                    <v-container fluid>
+                      <v-row cols="12">
+                        <v-col cols="4" v-for="metric in metrics" :key="metric.key">
+                          <v-sheet rounded="lg" color="grey-lighten-5" height="100" width="100"
+                            class="pa-4 text-center mx-auto">
+                            <h2 class="text-h6 mb-6">{{ round(item.raw.results[metric.key]) }}</h2>
+                            <p class="pt-0">{{ metric.title }}</p>
+                          </v-sheet>
+                        </v-col>
+                      </v-row>
+                    </v-container>
+
+
+
+                  </div>
+                </v-expand-transition>
+
               </v-card>
             </v-col>
           </v-row>
@@ -83,20 +125,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useModelStore } from '@/stores/modelStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'vue-router'
 import ModelUploadModal from '@/components/ModelUploadModal.vue';
 import { storeToRefs } from 'pinia';
 
-const store = useModelStore();
+const modelStore = useModelStore();
+const authStore = useAuthStore();
+
+const router = useRouter()
 
 // Estrai valori reattivi dallo store
-const { models, search, loading, totalCount, page, pageCount, itemsPerPage } = storeToRefs(store);
+const { models, search, loading, page, pageCount, itemsPerPage } = storeToRefs(modelStore);
+const { fetchModels, updateSearch, getSearchParams, setSearchParams } = modelStore;
+
+const { token } = storeToRefs(authStore);
+const { logout } = authStore;
 
 // Estrai azioni dallo store
-const { fetchModels, updateSearch } = store;
 
 const isModalOpen = ref(false);
+const show = ref({});
+
+
+const metrics = [
+  { key: 'ssim', title: 'SSIM' },
+  { key: 'psnr', title: 'PSNR' },
+  { key: 'lpips', title: 'LPIPS' },
+]
+
 
 function toggleModal() {
   isModalOpen.value = !isModalOpen.value;
@@ -105,18 +164,33 @@ function toggleModal() {
 function statusColor(status) {
   switch (status) {
     case "PENDING":
-      return 'secondary'
+      return 'text-secondary'
     case "COMPLETED":
-      return 'success'
+      return 'text-success'
     case "VIDEO_PROCESSING":
-      return 'warning'
+      return 'text-warning'
     case "MODEL_TRAINING":
-      return 'primary'
-    case "POINT_CLOUD_TRAINING":
-      return 'orange'
+      return 'text-primary'
+    case "POINT_CLOUD_RECONSTRUCTION":
+      return 'text-orange'
+    case "METRICS_GENERATION":
+      return 'text-purple'
     default:
-      return 'error'
+      return 'text-error'
   }
+}
+
+function goTo3DView(model) {
+  // Salva i parametri di ricerca nello store (Pinia)
+  setSearchParams({
+    lastSearch: search.value,
+    lastPage: page.value,
+    lastItemsPerPage: itemsPerPage.value,
+  });
+
+  // Naviga alla vista 3D con l'ID del modello
+  const routeData = router.resolve({ path: `/model/threejs/${model._id}` }); // oppure { path: '/about' }
+  window.open(routeData.href, '_blank');
 }
 
 function statusText(status) {
@@ -131,6 +205,8 @@ function statusText(status) {
       return 'Training'
     case "POINT_CLOUD_RECONSTRUCTION":
       return 'Point cloud reconstruction'
+    case "METRICS_GENERATION":
+      return 'Generating metrics'
     default:
       return 'Failed'
   }
@@ -146,9 +222,31 @@ async function changePage(newPage) {
 
 // Carica i dati iniziali
 onMounted(async () => {
+  const { lastPage, lastItemsPerPage, lastSearch } = getSearchParams();
+  if (page) {
+    page.value = lastPage;
+    itemsPerPage.value = lastItemsPerPage;
+    search.value = lastSearch
+  }
+
+  console.log(Array.isArray(models.value) ? 'models is an array' : 'models is not an array');
   await fetchModels();
   console.log(`Dati iniziali caricati - Pagina: ${page.value}, Models: ${models.value.length}`);
 });
+
+
+const round = (val) => {
+  return parseFloat(val.toFixed(3));
+}
+
+const doLogout = () => {
+  logout()
+  // Reindirizza alla pagina di login
+  router.push('/login')
+}
+
+// Computed property che verifica se l'utente è loggato
+const isLoggedIn = computed(() => !!token.value) // ✅ REATTIVO
 
 
 </script>

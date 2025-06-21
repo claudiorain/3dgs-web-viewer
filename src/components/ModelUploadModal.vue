@@ -4,7 +4,14 @@
       <v-card-title class="text-h5">Load a new model</v-card-title>
       <v-card-text>
         <v-text-field v-model="title" label="Title"></v-text-field>
-        <input type="file" @change="handleFileChange" accept="video/*" lang="en"/>
+        <v-textarea v-model="description" label="Descrizione"></v-textarea>
+        <!-- Grid List for engine options, responsive -->
+        <v-responsive class="overflow-y-auto" max-height="280">
+          <v-chip-group class="mt-3" column v-model="engineOption">
+            <v-chip v-for="opt in engineOptions" :key="opt.value" :text="opt.label" :value="opt.value"></v-chip>
+          </v-chip-group>
+          </v-responsive>
+          <input type="file" @change="handleFileChange" accept="video/*" lang="en" />
       </v-card-text>
       <v-card-actions>
         <v-btn @click="close">Cancel</v-btn>
@@ -24,8 +31,18 @@ const emit = defineEmits(['update:modelValue']);
 const modelStore = useModelStore();
 const isOpen = ref(false);
 const title = ref("");
+const description = ref("");
 const selectedFile = ref(null);
+const engineOption = ref(null); // This will hold the selected option from the dropdown
 const loading = ref(false);
+
+const engineOptions = [
+  { label: "inria", value: "INRIA" },
+  { label: "taming", value: "TAMING" },
+  { label: "mcmc", value: "MCMC" },
+  { label: "nerfstudio inria", value: "GSPLAT-INRIA" },
+  { label: "nerfstudio mcmc", value: "GSPLAT-MCMC" },
+];
 
 const handleFileChange = async (event) => {
   selectedFile.value = event.target.files[0];
@@ -35,24 +52,24 @@ const handleFileChange = async (event) => {
 };
 
 const submit = async () => {
-  if (!selectedFile.value || !title.value) {
-    alert("Select a file and insert a title!");
+  if (!selectedFile.value || !title.value || !engineOption.value) {
+    alert("Select a file, insert a title, and choose a model type!");
     return;
   }
 
   loading.value = true;
   try {
-    // Upload su S3
+    // Upload to S3
     await modelStore.uploadFileToS3(selectedFile.value);
-    // Salva il modello
-    await modelStore.saveModel(title.value);
+    // Save the model
+    await modelStore.saveModel(title.value,description.value, engineOption.value); // Pass the selected option to save the model
     isOpen.value = false;
   } catch (error) {
-    console.error("Errore:", error);
-    alert("Si è verificato un errore durante il caricamento.");
+    console.error("Error:", error);
+    alert("An error occurred during the upload.");
   } finally {
     loading.value = false;
-    close()
+    close();
   }
 };
 
