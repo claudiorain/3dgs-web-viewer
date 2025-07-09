@@ -24,6 +24,16 @@ export const createModel = async (modelData) => {
   }
 };
 
+export const retryModel = async (model_id) => {
+  try {
+    const response = await serverApi.post(`/models/`+ model_id + `/retry`);
+    return response.data; // Modello creato
+  } catch (error) {
+    console.error("Errore nella creazione del modello:", error);
+    throw error;
+  }
+};
+
 export const uploadToS3 = async (uploadUrl, file) => {
   try {
     await s3Api.put(uploadUrl, file, {

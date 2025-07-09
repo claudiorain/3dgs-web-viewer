@@ -1,13 +1,7 @@
 <template>
     <v-container fluid class="container pa-0 ma-0" ref="containerRef">
-
-    <canvas ref="bjsCanvas" class="canvas-element" />
-
-    <!-- Overlay con dati fissi nell'angolo in alto a sinistra -->
-    
-
-    <!-- Pulsante "Indietro" nell'angolo in alto a destra -->
-  </v-container>
+      <canvas ref="bjsCanvas" class="canvas-element" />
+    </v-container>
 </template>
 
 <script setup>
@@ -18,6 +12,8 @@ import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { useModelStore } from '@/stores/modelStore';
 import { storeToRefs } from 'pinia';
+import { useMetrics } from '@/utils/useMetrics'
+ const { roundMetric, getMetricColor } = useMetrics()
 
 const router = useRouter();
 const bjsCanvas = ref(null);
@@ -417,14 +413,14 @@ const positionStatOverlay = () => {
     
     // Aggiorna il contenuto con FPS inclusi
     overlayEl.innerHTML = `
-      <div class="stat">ThreeJS</div>
+      <div class="stat">${selectedModel.value.training_config.engine}</div>
       <div class="stat">${selectedModel.value.title}</div>
       <div class="stat fps-stat">FPS: ${fps.value}</div>
       <div class="stat">Nr. of splat: ${numberOfSplat.value}</div>
-      <div class="stat">PSNR: ${selectedModel.value.results.psnr}</div>
-      <div class="stat">LPIPS: ${selectedModel.value.results.lpips}</div>
-      <div class="stat">SSIM: ${selectedModel.value.results.ssim}</div>
-    `;
+      <div class="stat">PSNR: ${roundMetric(selectedModel.value.phases?.metrics_evaluation?.metadata?.metrics.psnr,'psnr')}</div>
+      <div class="stat">LPIPS: ${roundMetric(selectedModel.value.phases?.metrics_evaluation?.metadata?.metrics.lpips,"lpips")}</div>
+      <div class="stat">SSIM: ${roundMetric(selectedModel.value.phases?.metrics_evaluation?.metadata?.metrics.ssim,"ssim")}</div>
+    `
   }
 };
 

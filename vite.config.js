@@ -35,7 +35,8 @@ export default defineConfig({
     },
   },
   server: {
-    host: true, // Permette di accedere da un host esterno (Docker)
+    host: '0.0.0.0',  // Deve essere così per accesso esterno!
+    port: 5173,
     watch: {
       usePolling: true, // Risolve problemi di hot reload in Docker
     },
