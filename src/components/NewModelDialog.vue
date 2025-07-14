@@ -71,7 +71,7 @@
                 label="Training Engine"
                 variant="outlined"
                 density="comfortable"
-                :items="engines"
+                :items="engineOpts"
                 item-title="label"
                 item-value="value"
                 :rules="[rules.required]"
@@ -115,7 +115,7 @@
                 <v-slider
                   v-model="formData.quality_index"
                   :min="0"
-                  :max="3"
+                  :max="2"
                   :step="1"
                   show-ticks="always"
                   tick-size="4"
@@ -125,14 +125,14 @@
                   hide-details
                   class="quality-slider">
                   <template v-slot:tick-label="{ tick }">
-                    <div class="text-center" v-if="qualityLevels[tick]">
+                    <div class="text-center" v-if="qualityLevelOpts[tick]">
                       <v-icon 
                         :color="tick === formData.quality_index ? currentQuality.color : 'grey'"
                         size="18"
                         class="mb-1">
-                        {{ qualityLevels[tick].icon }}
+                        {{ qualityLevelOpts[tick].icon }}
                       </v-icon>
-                      <div class="text-caption">{{ qualityLevels[tick].short }}</div>
+                      <div class="text-caption">{{ qualityLevelOpts[tick].short }}</div>
                     </div>
                   </template>
                 </v-slider>
@@ -205,7 +205,7 @@
                 
                 <div class="d-flex flex-wrap gap-2">
                   <v-chip 
-                    v-for="phase in allPhases" 
+                    v-for="phase in phaseTimeline" 
                     :key="phase.value"
                     :color="phase.color"
                     variant="flat"
@@ -267,6 +267,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useModelStore } from '@/stores/modelStore';
+import { storeToRefs } from 'pinia';
 
 const props = defineProps({
   modelValue: Boolean
@@ -276,6 +277,10 @@ const emit = defineEmits(['update:modelValue', 'created']);
 
 const modelStore = useModelStore();
 const { requestPresignedUrl, uploadFileToS3, saveNewModel } = modelStore;
+
+// Estrai valori reattivi dallo store
+const { engineOpts,qualityLevelOpts,phaseTimeline } = storeToRefs(modelStore);
+
 
 // State
 const valid = ref(false);
@@ -292,56 +297,7 @@ const formData = ref({
 });
 
 // Quality Levels Configuration - AGGIUNTO (identico al ReprocessModelDialog)
-const qualityLevels = [
-  {
-    value: 'draft',
-    label: 'Draft',
-    short: 'Draft',
-    description: 'Fast training with reduced quality. Good for testing and quick iterations.',
-    time: '~15-20 min',
-    icon: 'mdi-run-fast',
-    color: 'grey',
-    speed: 5,
-    quality: 2,
-    vram: 2
-  },
-  {
-    value: 'standard',
-    label: 'Standard',
-    short: 'Std',
-    description: 'Balanced training providing good quality in reasonable time. Recommended for most cases.',
-    time: '~45-60 min',
-    icon: 'mdi-balance-horizontal',
-    color: 'blue',
-    speed: 3,
-    quality: 3,
-    vram: 3
-  },
-  {
-    value: 'high',
-    label: 'High Quality',
-    short: 'High',
-    description: 'Enhanced training with improved detail capture. Takes longer but delivers better results.',
-    time: '~90-120 min',
-    icon: 'mdi-star',
-    color: 'green',
-    speed: 2,
-    quality: 4,
-    vram: 4
-  },
-  {
-    value: 'ultra',
-    label: 'Ultra Quality',
-    short: 'Ultra',
-    description: 'Maximum quality training with finest details. Requires powerful hardware and patience.',
-    time: '~3+ hours',
-    icon: 'mdi-diamond-stone',
-    color: 'purple',
-    speed: 1,
-    quality: 5,
-    vram: 5
-  }
-];
+
 
 // Computed
 const isOpen = computed({
@@ -351,75 +307,8 @@ const isOpen = computed({
 
 // Current Quality Computed - AGGIUNTO
 const currentQuality = computed(() => {
-  return qualityLevels[formData.value.quality_index] || qualityLevels[1];
+  return qualityLevelOpts.value[formData.value.quality_index] || qualityLevelOpts.value[1];
 });
-
-// Definizione di tutte le fasi
-const allPhases = [
-  {
-    value: 'frame_extraction',
-    label: 'Frame Extraction',
-    icon: 'mdi-image-multiple',
-    color: 'blue'
-  },
-  {
-    value: 'point_cloud_building',
-    label: 'Point Cloud',
-    icon: 'mdi-cube-scan',
-    color: 'green'
-  },
-  {
-    value: 'training',
-    label: 'Training',
-    icon: 'mdi-brain',
-    color: 'orange'
-  },
-  {
-    value: 'metrics',
-    label: 'Metrics',
-    icon: 'mdi-chart-line',
-    color: 'purple'
-  }
-];
-
-// Engines disponibili
-const engines = [
-  {
-    value: 'INRIA',
-    label: 'INRIA',
-    description: 'Original Gaussian Splatting implementation',
-    icon: 'mdi-school',
-    color: 'blue'
-  },
-  {
-    value: 'TAMING',
-    label: 'TAMING',
-    description: 'Advanced training algorithm',
-    icon: 'mdi-lightning-bolt',
-    color: 'orange'
-  },
-  {
-    value: 'MCMC',
-    label: 'MCMC',
-    description: 'Monte Carlo method for training',
-    icon: 'mdi-dice-multiple',
-    color: 'green'
-  },
-  {
-    value: 'GSPLAT-INRIA',
-    label: 'Nerfstudio INRIA',
-    description: 'INRIA implementation with Nerfstudio',
-    icon: 'mdi-school-outline',
-    color: 'indigo'
-  },
-  {
-    value: 'GSPLAT-MCMC',
-    label: 'Nerfstudio MCMC',
-    description: 'MCMC implementation with Nerfstudio',
-    icon: 'mdi-dice-multiple-outline',
-    color: 'teal'
-  }
-];
 
 // Validation rules
 const rules = {

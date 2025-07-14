@@ -19,6 +19,21 @@
       </v-card-text>
     </v-card>
 
+    <!-- ✨ NUOVO: Indicatore refresh -->
+    <v-fade-transition>
+      <v-alert
+        v-if="isRefreshing"
+        type="info"
+        variant="tonal"
+        density="compact"
+        class="mb-4">
+        <div class="d-flex align-center">
+          <v-progress-circular indeterminate size="16" class="mr-2"></v-progress-circular>
+          Updating models...
+        </div>
+      </v-alert>
+    </v-fade-transition>
+
     <div class="content-area">
       <v-container fluid class="pa-4">
         <!-- Loading State -->
@@ -286,7 +301,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted,onUnmounted , computed } from 'vue';
 import { useModelStore } from '@/stores/modelStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router'
@@ -295,17 +310,20 @@ import CloneModelDialog from '@/components/CloneModelDialog.vue';
 import { storeToRefs } from 'pinia';
 import { useMetrics } from '@/utils/useMetrics'
 import { useTimes } from '@/utils/useTimes'
+import { useNotifications } from '@/utils/useNotifications'
 
 const modelStore = useModelStore();
 const authStore = useAuthStore();
 const router = useRouter()
 
-// Estrai valori reattivi dallo store
 const { models, titleFilter, loading, page, pageCount, itemsPerPage, 
-  statusFilter, statusFilterOpts, statusMap, phases, metrics } = storeToRefs(modelStore);
-const { fetchModels, getSearchParams, setSearchParams, saveRetryModel } = modelStore;
- const { roundMetric, getMetricColor } = useMetrics()
- const { formatDate, formatDuration } = useTimes()
+  statusFilter, statusFilterOpts, statusMap, phases, metrics, isRefreshing } = storeToRefs(modelStore);
+const { fetchModels, getSearchParams, setSearchParams, saveRetryModel,handleModelNotification,cleanupNotificationHandlers } = modelStore;
+
+const { roundMetric, getMetricColor } = useMetrics()
+const { formatDate, formatDuration } = useTimes()
+const { isConnected, addPageHandler, removePageHandler } = useNotifications()
+
 
 const { token } = storeToRefs(authStore);
 const { logout } = authStore;
@@ -317,6 +335,14 @@ const show = ref({});
 
 // Variabili locali
 let searchTimeout = null;
+
+// ✨ NUOVO: Handler per le notifiche specifiche di questa pagina
+const handlePageNotification = (notification) => {
+  console.log(`📱 HomeView received notification: ${notification.type} for ${notification.model_title}`)
+  
+  // Chiama la funzione del store che refresha la pagina
+  handleModelNotification(notification)
+}
 
 // Computed per verificare se ci sono filtri attivi
 const hasActiveFilters = computed(() => {
@@ -495,13 +521,22 @@ onMounted(async () => {
     statusFilter.value = lastStatusFilter || null;
   }
   
-  // Carica i dati (fetchModels userà automaticamente i valori correnti)
+  // Carica i dati
   await fetchModels();
+  
+  // ✨ NUOVO: Registra l'handler per le notifiche
+  addPageHandler(handlePageNotification)
 });
 
-const round = (val) => {
-  return parseFloat(val.toFixed(3));
-}
+// ✨ NUOVO: Cleanup quando si esce dalla pagina
+onUnmounted(() => {
+  // Rimuovi l'handler delle notifiche
+  removePageHandler(handlePageNotification)
+  
+  // Cleanup del store
+  cleanupNotificationHandlers()
+})
+
 
 const doLogout = () => {
   logout()

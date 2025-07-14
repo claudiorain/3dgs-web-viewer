@@ -126,7 +126,7 @@
                 <v-slider
                   v-model="formData.quality_index"
                   :min="0"
-                  :max="3"
+                  :max="2"
                   :step="1"
                   show-ticks="always"
                   tick-size="4"
@@ -288,52 +288,40 @@ const formData = ref({
 // Quality Levels Configuration (fix values to match backend enum)
 const qualityLevels = [
   {
-    value: 'draft',        // ← Fix: minuscolo come enum backend
-    label: 'Draft',
-    short: 'Draft',
+    value: 'fast',        // ← Fix: minuscolo come enum backend
+    label: 'Fast',
+    short: 'Fast',
     description: 'Fast training with reduced quality. Good for testing and quick iterations.',
     time: '~15-20 min',
     icon: 'mdi-run-fast',
     color: 'grey',
     speed: 5,
-    quality: 2,
+    quality: 1,
     vram: 2
   },
   {
-    value: 'standard',     // ← Fix: minuscolo
-    label: 'Standard',
-    short: 'Std',
+    value: 'balanced',     // ← Fix: minuscolo
+    label: 'Balanced',
+    short: 'Balanced',
     description: 'Balanced training providing good quality in reasonable time. Recommended for most cases.',
     time: '~45-60 min',
     icon: 'mdi-balance-horizontal',
     color: 'blue',
     speed: 3,
-    quality: 3,
+    quality: 2,
     vram: 3
   },
   {
-    value: 'high',         // ← Fix: minuscolo
-    label: 'High Quality',
-    short: 'High',
+    value: 'quality',         // ← Fix: minuscolo
+    label: 'Quality',
+    short: 'Quality',
     description: 'Enhanced training with improved detail capture. Takes longer but delivers better results.',
     time: '~90-120 min',
     icon: 'mdi-star',
     color: 'green',
     speed: 2,
-    quality: 4,
+    quality: 3,
     vram: 4
-  },
-  {
-    value: 'ultra',        // ← Fix: minuscolo
-    label: 'Ultra Quality',
-    short: 'Ultra',
-    description: 'Maximum quality training with finest details. Requires powerful hardware and patience.',
-    time: '~3+ hours',
-    icon: 'mdi-diamond-stone',
-    color: 'purple',
-    speed: 1,
-    quality: 5,
-    vram: 5
   }
 ];
 
