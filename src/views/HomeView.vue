@@ -129,6 +129,18 @@
                         </v-chip>
                       </div>
 
+                      <!-- ✨ NUOVO: Quality badge -->
+                      <div class="quality-badge">
+                        <v-chip 
+                          :color="getQualityConfig(getQuality(item.raw)).color" 
+                          variant="elevated" 
+                          size="small"
+                          class="quality-chip">
+                          <v-icon start size="12" color="white">{{ getQualityConfig(getQuality(item.raw)).icon }}</v-icon>
+                          <span class="text-white font-weight-medium">{{ getQualityConfig(getQuality(item.raw)).text }}</span>
+                        </v-chip>
+                      </div>
+
                       <!-- Engine badge -->
                       <div class="engine-badge">
                         <v-chip color="surface" variant="flat" size="small">
@@ -212,12 +224,12 @@
                     </v-btn>
                     
                     <v-btn 
-                      v-if="canClone(item.raw)" 
+                      v-if="canFork(item.raw)" 
                       color="cyan-lighten-1" 
                       variant="outlined"
-                      @click="openCloneDialog(item.raw)" 
-                      prepend-icon="mdi-content-copy">
-                      Clone
+                      @click="openForkDialog(item.raw)" 
+                      prepend-icon="mdi-source-fork">
+                      Fork
                     </v-btn>
 
                     <v-btn 
@@ -296,7 +308,7 @@
 
     <!-- Dialogs -->
     <NewModelDialog v-model="isNewModelDialogOpen" />
-    <CloneModelDialog v-model="isCloneModelDialogOpen" :sourceModel="selectedModel" />
+    <ForkModelDialog v-model="isForkModelDialogOpen" :sourceModel="selectedModel" />
   </div>
 </template>
 
@@ -306,7 +318,7 @@ import { useModelStore } from '@/stores/modelStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router'
 import NewModelDialog from '@/components/NewModelDialog.vue';
-import CloneModelDialog from '@/components/CloneModelDialog.vue';
+import ForkModelDialog from '@/components/ForkModelDialog.vue';
 import { storeToRefs } from 'pinia';
 import { useMetrics } from '@/utils/useMetrics'
 import { useTimes } from '@/utils/useTimes'
@@ -324,14 +336,32 @@ const { roundMetric, getMetricColor } = useMetrics()
 const { formatDate, formatDuration } = useTimes()
 const { isConnected, addPageHandler, removePageHandler } = useNotifications()
 
-
 const { token } = storeToRefs(authStore);
 const { logout } = authStore;
 
 const isNewModelDialogOpen = ref(false);
-const isCloneModelDialogOpen = ref(false);
+const isForkModelDialogOpen = ref(false);
 const selectedModel = ref(null);
 const show = ref({});
+
+// ✨ NUOVO: Configurazione per i livelli di qualità
+const qualityLevels = {
+  'fast': {
+    color: 'yellow',
+    icon: 'mdi-run-fast',
+    text: 'Fast'
+  },
+  'balanced': {
+    color: 'orange',
+    icon: 'mdi-scale-balance',
+    text: 'Balanced'
+  },
+  'quality': {
+    color: 'amber',
+    icon: 'mdi-creation',
+    text: 'Quality'
+  }
+};
 
 // Variabili locali
 let searchTimeout = null;
@@ -402,6 +432,35 @@ function getStatusConfig(status) {
   return statusMap.value[status] || statusMap.value['PENDING'];
 }
 
+// ✨ NUOVO: Funzioni per la gestione della qualità
+function getQuality(model) {
+  // Cerca il livello di qualità nella configurazione del training
+  const quality = model.training_config?.quality_level || 
+                 model.training_config?.quality || 
+                 model.quality_level ||
+                 model.quality;
+  
+  // Se non è specificato, prova a dedurre dal numero di iterazioni
+  if (!quality) {
+    const iterations = model.training_config?.iterations || 
+                      model.training_config?.num_iterations ||
+                      model.iterations;
+    
+    if (iterations) {
+      if (iterations <= 7000) return 'low';
+      if (iterations <= 15000) return 'medium';
+      if (iterations <= 30000) return 'high';
+      return 'ultra';
+    }
+  }
+  
+  return quality?.toLowerCase() || 'unknown';
+}
+
+function getQualityConfig(quality) {
+  return qualityLevels[quality] || qualityLevels['unknown'];
+}
+
 function getFrameCount(model) {
   return model.phases?.frame_extraction?.metadata?.frame_count;
 }
@@ -454,8 +513,6 @@ function getCreatedDate(model) {
   return model.created_at;
 }
 
-
-
 function hasMetrics(model) {
   return getMetrics(model) !== null;
 }
@@ -464,7 +521,7 @@ function getMetrics(model) {
   return model.phases?.metrics_evaluation?.metadata?.metrics || null;
 }
 
-function canClone(model) {
+function canFork(model) {
   return ['COMPLETED','FAILED'].includes(model.phases?.frame_extraction?.status)
 }
 
@@ -476,9 +533,9 @@ function openNewModelDialog() {
   isNewModelDialogOpen.value = true;
 }
 
-function openCloneDialog(model) {
+function openForkDialog(model) {
   selectedModel.value = model;
-  isCloneModelDialogOpen.value = true;
+  isForkModelDialogOpen.value = true;
 }
 
 function goTo3DView(model) {
@@ -537,7 +594,6 @@ onUnmounted(() => {
   cleanupNotificationHandlers()
 })
 
-
 const doLogout = () => {
   logout()
   router.push('/login')
@@ -592,6 +648,18 @@ const isLoggedIn = computed(() => !!token.value)
   position: absolute;
   top: 8px;
   right: 8px;
+}
+
+/* ✨ NUOVO: Stili per il badge qualità */
+.quality-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  transform: translateY(40px); /* Posiziona sotto il badge di status */
+}
+
+.quality-chip {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .engine-badge {

@@ -136,14 +136,14 @@
                   hide-details
                   class="quality-slider">
                   <template v-slot:tick-label="{ tick }">
-                    <div class="text-center" v-if="qualityLevels[tick]">
+                    <div class="text-center" v-if="qualityLevelOpts[tick]">
                       <v-icon 
                         :color="tick === formData.quality_index ? currentQuality.color : 'grey'"
                         size="18"
                         class="mb-1">
-                        {{ qualityLevels[tick].icon }}
+                        {{ qualityLevelOpts[tick].icon }}
                       </v-icon>
-                      <div class="text-caption">{{ qualityLevels[tick].short }}</div>
+                      <div class="text-caption">{{ qualityLevelOpts[tick].short }}</div>
                     </div>
                   </template>
                 </v-slider>
@@ -270,7 +270,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'reprocessed']);
 
 const modelStore = useModelStore();
-const { saveReprocessingModel  } = modelStore;
+const { saveReprocessingModel ,qualityLevelOpts } = modelStore;
 
 // State
 const valid = ref(false);
@@ -286,44 +286,7 @@ const formData = ref({
 });
 
 // Quality Levels Configuration (fix values to match backend enum)
-const qualityLevels = [
-  {
-    value: 'fast',        // ← Fix: minuscolo come enum backend
-    label: 'Fast',
-    short: 'Fast',
-    description: 'Fast training with reduced quality. Good for testing and quick iterations.',
-    time: '~15-20 min',
-    icon: 'mdi-run-fast',
-    color: 'grey',
-    speed: 5,
-    quality: 1,
-    vram: 2
-  },
-  {
-    value: 'balanced',     // ← Fix: minuscolo
-    label: 'Balanced',
-    short: 'Balanced',
-    description: 'Balanced training providing good quality in reasonable time. Recommended for most cases.',
-    time: '~45-60 min',
-    icon: 'mdi-balance-horizontal',
-    color: 'blue',
-    speed: 3,
-    quality: 2,
-    vram: 3
-  },
-  {
-    value: 'quality',         // ← Fix: minuscolo
-    label: 'Quality',
-    short: 'Quality',
-    description: 'Enhanced training with improved detail capture. Takes longer but delivers better results.',
-    time: '~90-120 min',
-    icon: 'mdi-star',
-    color: 'green',
-    speed: 2,
-    quality: 3,
-    vram: 4
-  }
-];
+
 
 // Computed
 const isOpen = computed({
@@ -332,7 +295,7 @@ const isOpen = computed({
 });
 
 const currentQuality = computed(() => {
-  return qualityLevels[formData.value.quality_index] || qualityLevels[1];
+  return qualityLevelOpts[formData.value.quality_index] || qualityLevelOpts[1];
 });
 
 // Definizione di tutte le fasi
@@ -350,6 +313,13 @@ const allPhases = [
     description: 'Generate 3D point cloud with COLMAP',
     icon: 'mdi-cube-scan',
     color: 'green'
+  },
+  {
+    value: 'depth_regularization',
+    label: 'Depth Regularization',
+    description: 'Depth',
+    icon: 'mdi-cube-scan',
+    color: 'pink'
   },
   {
     value: 'training',

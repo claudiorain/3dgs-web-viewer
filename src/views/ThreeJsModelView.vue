@@ -6,9 +6,8 @@
 import * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
 import * as JSZip from 'jszip';
 import * as THREE from 'three';
-import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount,watch } from 'vue';
+import { useRoute,useRouter } from 'vue-router';
 import { useModelStore } from '@/stores/modelStore';
 import { storeToRefs } from 'pinia';
 import { useMetrics } from '@/utils/useMetrics'
@@ -30,11 +29,6 @@ const numberOfSplat = ref(null);
 const fps = ref(0);
 const frameCount = ref(0);
 const lastTime = ref(performance.now());
-
-const goBack = () => {
-  cleanup();
-  router.push({ name: 'home' });
-};
 
 // Funzione per calcolare gli FPS
 const updateFPS = () => {

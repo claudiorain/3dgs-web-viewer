@@ -35,6 +35,12 @@ export const useModelStore = defineStore("model", {
     color: 'green'
   },
   {
+    value: 'depth_regularization',
+    label: 'Depth Regularization',
+    icon: 'mdi-cube-scan',
+    color: 'pink'
+  },
+  {
     value: 'training',
     label: 'Training',
     icon: 'mdi-brain',
@@ -95,7 +101,7 @@ export const useModelStore = defineStore("model", {
         description: 'Fast training with reduced quality. Good for testing and quick iterations.',
         time: '~15-20 min',
         icon: 'mdi-run-fast',
-        color: 'grey',
+        color: 'yellow darken-1',
         speed: 5,
         quality: 1,
         vram: 2
@@ -106,8 +112,8 @@ export const useModelStore = defineStore("model", {
         short: 'Balanced',
         description: 'Balanced training providing good quality in reasonable time. Recommended for most cases.',
         time: '~45-60 min',
-        icon: 'mdi-balance-horizontal',
-        color: 'blue',
+        icon: 'mdi-scale-balance',
+        color: 'orange',
         speed: 3,
         quality: 3,
         vram: 3
@@ -118,8 +124,8 @@ export const useModelStore = defineStore("model", {
         short: 'Quality',
         description: 'Enhanced training with improved detail capture. Takes longer but delivers better results.',
         time: '~90-120 min',
-        icon: 'mdi-star',
-        color: 'green',
+        icon: 'mdi-creation',
+        color: 'amber',
         speed: 2,
         quality: 5,
         vram: 4
