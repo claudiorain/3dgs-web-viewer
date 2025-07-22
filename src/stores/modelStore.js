@@ -35,12 +35,6 @@ export const useModelStore = defineStore("model", {
     color: 'green'
   },
   {
-    value: 'depth_regularization',
-    label: 'Depth Regularization',
-    icon: 'mdi-cube-scan',
-    color: 'pink'
-  },
-  {
     value: 'training',
     label: 'Training',
     icon: 'mdi-brain',
@@ -130,7 +124,7 @@ export const useModelStore = defineStore("model", {
         quality: 5,
         vram: 4
       }
-      
+
     ],
     // ✨ NUOVO: Aggiungi questi campi
     isRefreshing: false,  // per indicare refresh in corso
@@ -300,12 +294,12 @@ export const useModelStore = defineStore("model", {
 
     async handleModelNotification(notification) {
       console.log(`🔄 Handling notification for model: ${notification.model_title}`)
-      
+
       // Debounce per evitare refresh multipli se arrivano molte notifiche
       if (this.refreshTimeout) {
         clearTimeout(this.refreshTimeout)
       }
-      
+
       this.refreshTimeout = setTimeout(() => {
         this.refreshCurrentPage()
       }, 1000) // Aspetta 1 secondo

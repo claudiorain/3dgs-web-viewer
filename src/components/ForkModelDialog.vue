@@ -6,12 +6,12 @@
         <v-icon class="mr-2">mdi-content-copy</v-icon>
         Reprocess Model
       </v-card-title>
-      
+
       <v-card-text class="pa-6">
         <!-- Info modello sorgente -->
-        <v-alert 
-          type="info" 
-          variant="tonal" 
+        <v-alert
+          type="info"
+          variant="tonal"
           class="mb-6"
           prepend-icon="mdi-information">
           <div class="text-subtitle-2 mb-1">Source Model: {{ sourceModel?.title }}</div>
@@ -114,15 +114,15 @@
                     <v-icon class="mr-2">mdi-tune</v-icon>
                     Training Quality
                   </label>
-                  <v-chip 
-                    :color="currentQuality.color" 
-                    variant="tonal" 
+                  <v-chip
+                    :color="currentQuality.color"
+                    variant="tonal"
                     size="small">
                     <v-icon start size="16">{{ currentQuality.icon }}</v-icon>
                     {{ currentQuality.label }}
                   </v-chip>
                 </div>
-                
+
                 <v-slider
                   v-model="formData.quality_index"
                   :min="0"
@@ -137,7 +137,7 @@
                   class="quality-slider">
                   <template v-slot:tick-label="{ tick }">
                     <div class="text-center" v-if="qualityLevelOpts[tick]">
-                      <v-icon 
+                      <v-icon
                         :color="tick === formData.quality_index ? currentQuality.color : 'grey'"
                         size="18"
                         class="mb-1">
@@ -147,7 +147,7 @@
                     </div>
                   </template>
                 </v-slider>
-                
+
                 <!-- Quality Info Card -->
                 <v-card variant="outlined" class="mt-4 pa-4">
                   <div class="d-flex align-center mb-2">
@@ -159,7 +159,7 @@
                     </v-chip>
                   </div>
                   <div class="text-body-2 mb-3">{{ currentQuality.description }}</div>
-                  
+
                   <!-- Quality Metrics -->
                   <v-row dense>
                     <v-col cols="4">
@@ -213,10 +213,10 @@
                   <v-icon class="mr-2">mdi-timeline</v-icon>
                   Processing Pipeline
                 </div>
-                
+
                 <div class="d-flex flex-wrap gap-2">
-                  <v-chip 
-                    v-for="phase in allPhases" 
+                  <v-chip
+                    v-for="phase in allPhases"
                     :key="phase.value"
                     :color="getPhaseChipColor(phase.value)"
                     :variant="getPhaseChipVariant(phase.value)"
@@ -226,7 +226,7 @@
                     <v-icon v-if="isPhaseReused(phase.value)" end size="16">mdi-cached</v-icon>
                   </v-chip>
                 </div>
-                
+
                 <div class="text-caption mt-2 text-grey">
                   <v-icon size="16" class="mr-1">mdi-cached</v-icon>
                   Phases with cache icon will reuse existing results
@@ -315,13 +315,6 @@ const allPhases = [
     color: 'green'
   },
   {
-    value: 'depth_regularization',
-    label: 'Depth Regularization',
-    description: 'Depth',
-    icon: 'mdi-cube-scan',
-    color: 'pink'
-  },
-  {
     value: 'training',
     label: 'Training',
     description: 'Train Gaussian Splatting model',
@@ -333,19 +326,19 @@ const allPhases = [
 // Fasi disponibili (solo quelle completate)
 const availablePhases = computed(() => {
   if (!props.sourceModel?.phases) return [];
-  
+
   const available = [];
-  
+
   // ✅ Sempre includi frame_extraction come prima opzione
   available.push({
     ...allPhases[0], // frame_extraction
     description: 'Restart from beginning with new parameters'
   });
-  
+
   allPhases.forEach(phase => {
     const phaseData = props.sourceModel.phases[phase.value];
     if (phaseData && ['COMPLETED', 'FAILED'].includes(phaseData.status)) {
-      
+
       // ✅ CASO 1: Se la fase è completata, permetti di ripartire da quella fase
       if (phaseData.status === 'COMPLETED') {
         available.push({
@@ -353,7 +346,7 @@ const availablePhases = computed(() => {
           description: `Restart from ${phase.label} (reuse previous phases)`
         });
       }
-      
+
       // ✅ CASO 2: Se la fase è fallita, permetti di ripartire da quella fase
       if (phaseData.status === 'FAILED') {
         available.push({
@@ -361,7 +354,7 @@ const availablePhases = computed(() => {
           description: `Retry ${phase.label} (reuse previous completed phases)`
         });
       }
-      
+
       // ✅ CASO 3: Se fase completata e c'è una successiva, includi anche quella
       const currentIndex = allPhases.findIndex(p => p.value === phase.value);
       if (phaseData.status === 'COMPLETED' && currentIndex < allPhases.length - 1) {
@@ -373,9 +366,9 @@ const availablePhases = computed(() => {
       }
     }
   });
-  
+
   // ✅ Rimuovi duplicati
-  return available.filter((phase, index, self) => 
+  return available.filter((phase, index, self) =>
     index === self.findIndex(p => p.value === phase.value)
   );
 });
@@ -413,10 +406,10 @@ const rules = {
 // Methods
 function getPhaseChipColor(phaseValue) {
   if (!formData.value.from_phase) return 'grey';
-  
+
   const fromPhaseIndex = allPhases.findIndex(p => p.value === formData.value.from_phase);
   const currentPhaseIndex = allPhases.findIndex(p => p.value === phaseValue);
-  
+
   if (currentPhaseIndex < fromPhaseIndex) {
     return 'success'; // Reused phases
   } else if (currentPhaseIndex >= fromPhaseIndex) {
@@ -427,10 +420,10 @@ function getPhaseChipColor(phaseValue) {
 
 function getPhaseChipVariant(phaseValue) {
   if (!formData.value.from_phase) return 'outlined';
-  
+
   const fromPhaseIndex = allPhases.findIndex(p => p.value === formData.value.from_phase);
   const currentPhaseIndex = allPhases.findIndex(p => p.value === phaseValue);
-  
+
   if (currentPhaseIndex < fromPhaseIndex) {
     return 'tonal'; // Reused phases
   } else if (currentPhaseIndex >= fromPhaseIndex) {
@@ -441,10 +434,10 @@ function getPhaseChipVariant(phaseValue) {
 
 function isPhaseReused(phaseValue) {
   if (!formData.value.from_phase) return false;
-  
+
   const fromPhaseIndex = allPhases.findIndex(p => p.value === formData.value.from_phase);
   const currentPhaseIndex = allPhases.findIndex(p => p.value === phaseValue);
-  
+
   return currentPhaseIndex < fromPhaseIndex;
 }
 
