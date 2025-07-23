@@ -223,21 +223,22 @@
             </v-col>
 
             <!-- Upload Progress -->
-            <v-col cols="12" v-if="uploadProgress > 0 && uploadProgress < 100">
-              <v-card variant="outlined" class="pa-4">
-                <div class="text-subtitle-2 mb-2">
-                  <v-icon class="mr-2">mdi-cloud-upload</v-icon>
-                  Uploading Video...
-                </div>
-                <v-progress-linear 
-                  :model-value="uploadProgress" 
-                  height="8" 
-                  rounded 
-                  color="primary">
-                </v-progress-linear>
-                <div class="text-caption mt-1">{{ uploadProgress }}% completed</div>
-              </v-card>
-            </v-col>
+           <!-- Upload Progress -->
+          <v-col cols="12" v-if="uploadProgress > 0 && uploadProgress < 100">
+            <v-card variant="outlined" class="pa-4">
+              <div class="text-subtitle-2 mb-2">
+                <v-icon class="mr-2">mdi-cloud-upload</v-icon>
+                Uploading Video...
+              </div>
+              <v-progress-linear
+                :model-value="uploadProgress"
+                height="8"
+                rounded
+                color="primary">
+              </v-progress-linear>
+              <div class="text-caption mt-1">{{ uploadProgress.toFixed(2) }}% completed</div>
+            </v-card>
+          </v-col>
           </v-row>
         </v-form>
       </v-card-text>

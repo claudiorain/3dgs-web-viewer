@@ -95,7 +95,7 @@ export const useModelStore = defineStore("model", {
         description: 'Fast training with reduced quality. Good for testing and quick iterations.',
         time: '~15-20 min',
         icon: 'mdi-run-fast',
-        color: 'yellow darken-1',
+        color: 'yellow-accent-4',
         speed: 5,
         quality: 1,
         vram: 2

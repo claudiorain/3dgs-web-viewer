@@ -129,8 +129,13 @@
                         </v-chip>
                       </div>
 
-                      <!-- ✨ NUOVO: Quality badge -->
-                      <div class="quality-badge">
+                      <!-- Engine and Quality badges affiancati -->
+                      <div class="engine-badges">
+                        <v-chip color="surface" variant="flat" size="small" class="mb-1">
+                          <v-icon start size="12">mdi-engine</v-icon>
+                          {{ getEngine(item.raw) }}
+                        </v-chip>
+                        
                         <v-chip 
                           :color="getQualityConfig(getQuality(item.raw)).color" 
                           variant="elevated" 
@@ -138,14 +143,6 @@
                           class="quality-chip">
                           <v-icon start size="12" color="white">{{ getQualityConfig(getQuality(item.raw)).icon }}</v-icon>
                           <span class="text-white font-weight-medium">{{ getQualityConfig(getQuality(item.raw)).text }}</span>
-                        </v-chip>
-                      </div>
-
-                      <!-- Engine badge -->
-                      <div class="engine-badge">
-                        <v-chip color="surface" variant="flat" size="small">
-                          <v-icon start size="12">mdi-engine</v-icon>
-                          {{ getEngine(item.raw) }}
                         </v-chip>
                       </div>
 
@@ -347,7 +344,7 @@ const show = ref({});
 // ✨ NUOVO: Configurazione per i livelli di qualità
 const qualityLevels = {
   'fast': {
-    color: 'yellow',
+    color: 'yellow-accent-4',
     icon: 'mdi-run-fast',
     text: 'Fast'
   },
@@ -650,22 +647,18 @@ const isLoggedIn = computed(() => !!token.value)
   right: 8px;
 }
 
-/* ✨ NUOVO: Stili per il badge qualità */
-.quality-badge {
+/* Stili per i badge engine e qualità affiancati */
+.engine-badges {
   position: absolute;
   top: 8px;
-  right: 8px;
-  transform: translateY(40px); /* Posiziona sotto il badge di status */
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .quality-chip {
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.engine-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
 }
 
 .progress-overlay {
