@@ -317,9 +317,9 @@ import { useRouter } from 'vue-router'
 import NewModelDialog from '@/components/NewModelDialog.vue';
 import ForkModelDialog from '@/components/ForkModelDialog.vue';
 import { storeToRefs } from 'pinia';
-import { useMetrics } from '@/utils/useMetrics'
-import { useTimes } from '@/utils/useTimes'
-import { useNotifications } from '@/utils/useNotifications'
+import { useMetrics } from '@/composables/useMetrics'
+import { useTimes } from '@/composables/useTimes'
+import { useNotificationSingleton } from '@/composables/notificationSingleton'
 
 const modelStore = useModelStore();
 const authStore = useAuthStore();
@@ -331,7 +331,7 @@ const { fetchModels, getSearchParams, setSearchParams, saveRetryModel,handleMode
 
 const { roundMetric, getMetricColor } = useMetrics()
 const { formatDate, formatDuration } = useTimes()
-const { isConnected, addPageHandler, removePageHandler } = useNotifications()
+const { isConnected, addPageHandler, removePageHandler } = useNotificationSingleton()
 
 const { token } = storeToRefs(authStore);
 const { logout } = authStore;

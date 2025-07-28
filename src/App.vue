@@ -152,12 +152,12 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { RouterView } from 'vue-router'
-import { useNotifications } from '@/utils/useNotifications'
+import { useNotificationSingleton } from '@/composables/notificationSingleton'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { storeToRefs } from 'pinia'
 
 // Composables e store
-const { isConnected } = useNotifications()
+const { isConnected } = useNotificationSingleton()
 const notificationStore = useNotificationStore()
 const { latestNotification, notifications, unreadCount } = storeToRefs(notificationStore)
 

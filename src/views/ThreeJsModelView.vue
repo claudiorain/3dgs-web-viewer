@@ -10,7 +10,7 @@ import { ref, onMounted, onBeforeUnmount,watch } from 'vue';
 import { useRoute,useRouter } from 'vue-router';
 import { useModelStore } from '@/stores/modelStore';
 import { storeToRefs } from 'pinia';
-import { useMetrics } from '@/utils/useMetrics'
+import { useMetrics } from '@/composables/useMetrics'
 const { roundMetric, getMetricColor } = useMetrics()
 
 const router = useRouter();
