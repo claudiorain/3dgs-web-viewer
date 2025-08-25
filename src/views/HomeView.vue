@@ -49,7 +49,7 @@
             <v-card class="mb-4" elevation="1">
               <v-card-text class="py-3">
                 <v-row align="center">
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="3">
                     <v-text-field 
                       v-model="titleFilter" 
                       density="comfortable" 
@@ -62,7 +62,7 @@
                       @click:clear="clearSearch">
                     </v-text-field>
                   </v-col>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="3">
                     <v-select
                       v-model="statusFilter"
                       label="Filter by status"
@@ -76,7 +76,22 @@
                       @update:model-value="handleStatusFilterChange">
                     </v-select>
                   </v-col>
-                  <v-col cols="12" md="4" class="text-right">
+                  <!-- ✨ NUOVO: Filtro per Engine -->
+                  <v-col cols="12" md="3">
+                    <v-select
+                      v-model="engineFilter"
+                      label="Filter by engine"
+                      :items="engineFilterOpts"
+                      item-title="title"
+                      item-value="value"
+                      variant="outlined"
+                      density="comfortable"
+                      clearable
+                      hide-details
+                      @update:model-value="handleEngineFilterChange">
+                    </v-select>
+                  </v-col>
+                  <v-col cols="12" md="3" class="text-right">
                     <v-btn color="primary" size="large" @click="openNewModelDialog" prepend-icon="mdi-plus">
                       New Model
                     </v-btn>
@@ -131,9 +146,13 @@
 
                       <!-- Engine and Quality badges affiancati -->
                       <div class="engine-badges">
-                        <v-chip color="surface" variant="flat" size="small" class="mb-1">
-                          <v-icon start size="12">mdi-engine</v-icon>
-                          {{ getEngine(item.raw) }}
+                        <v-chip 
+                          :color="getEngineConfig(getEngine(item.raw)).color" 
+                          variant="elevated" 
+                          size="small" 
+                          class="mb-1 engine-chip">
+                          <v-icon start size="12" color="white">{{ getEngineConfig(getEngine(item.raw)).icon }}</v-icon>
+                          <span class="text-white font-weight-medium">{{ getEngine(item.raw) }}</span>
                         </v-chip>
                         
                         <v-chip 
@@ -326,7 +345,7 @@ const authStore = useAuthStore();
 const router = useRouter()
 
 const { models, titleFilter, loading, page, pageCount, itemsPerPage, 
-  statusFilter, statusFilterOpts, statusMap, phases, metrics, isRefreshing } = storeToRefs(modelStore);
+  statusFilter,engineFilter, statusFilterOpts, statusMap, phases, metrics, isRefreshing } = storeToRefs(modelStore);
 const { fetchModels, getSearchParams, setSearchParams, saveRetryModel,handleModelNotification,cleanupNotificationHandlers } = modelStore;
 
 const { roundMetric, getMetricColor } = useMetrics()
@@ -340,6 +359,46 @@ const isNewModelDialogOpen = ref(false);
 const isForkModelDialogOpen = ref(false);
 const selectedModel = ref(null);
 const show = ref({});
+
+// ✨ NUOVO: Opzioni per il filtro engine
+const engineFilterOpts = computed(() => {
+  const engines = new Set();
+  models.value.forEach(model => {
+    const engine = getEngine(model);
+    if (engine) {
+      engines.add(engine);
+    }
+  });
+  
+  return Array.from(engines).sort().map(engine => ({
+    title: engine,
+    value: engine
+  }));
+});
+
+// ✨ NUOVO: Configurazione per gli engines
+const engineLevels = {
+  'INRIA': {
+    color: 'blue',
+    icon: 'mdi-cube-scan',
+    text: 'INRIA'
+  },
+  'NERFSTUDIO': {
+    color: 'green',
+    icon: 'mdi-cube-outline',
+    text: 'NeRF Studio'
+  },
+  'GAUSSIAN_SPLATTING': {
+    color: 'purple',
+    icon: 'mdi-chart-bubble',
+    text: 'Gaussian Splatting'
+  },
+  'COLMAP': {
+    color: 'orange',
+    icon: 'mdi-camera-outline',
+    text: 'COLMAP'
+  }
+};
 
 // ✨ NUOVO: Configurazione per i livelli di qualità
 const qualityLevels = {
@@ -371,9 +430,9 @@ const handlePageNotification = (notification) => {
   handleModelNotification(notification)
 }
 
-// Computed per verificare se ci sono filtri attivi
+// ✨ AGGIORNATO: Computed per verificare se ci sono filtri attivi
 const hasActiveFilters = computed(() => {
-  return titleFilter.value || statusFilter.value;
+  return titleFilter.value || statusFilter.value || engineFilter.value;
 });
 
 // Debounce per la ricerca
@@ -392,7 +451,7 @@ async function applyFilters() {
   // Reset alla prima pagina quando si applicano i filtri
   page.value = 1;
   
-  // Ricarica i dati - fetchModels usa automaticamente titleFilter.value e statusFilter.value
+  // Ricarica i dati - fetchModels usa automaticamente titleFilter.value, statusFilter.value e engineFilter.value
   await fetchModels();
 }
 
@@ -402,16 +461,23 @@ async function handleStatusFilterChange() {
   await applyFilters();
 }
 
+// ✨ NUOVO: Handler per il cambio del filtro engine
+async function handleEngineFilterChange() {
+  console.log('Engine filter changed to:', engineFilter.value);
+  await applyFilters();
+}
+
 // Pulisce la ricerca
 async function clearSearch() {
   titleFilter.value = '';
   await applyFilters();
 }
 
-// Pulisce tutti i filtri
+// ✨ AGGIORNATO: Pulisce tutti i filtri
 async function clearAllFilters() {
   titleFilter.value = '';
   statusFilter.value = null;
+  engineFilter.value = null;
   await applyFilters();
 }
 
@@ -419,6 +485,15 @@ async function clearAllFilters() {
 
 function getEngine(model) {
   return model.training_config?.engine || 'INRIA';
+}
+
+// ✨ NUOVO: Funzione per ottenere la configurazione dell'engine
+function getEngineConfig(engine) {
+  return engineLevels[engine] || {
+    color: 'grey',
+    icon: 'mdi-engine',
+    text: engine
+  };
 }
 
 function getStatus(model) {
@@ -487,7 +562,7 @@ function getProgress(model) {
 }
 
 function getPhaseTimeline(model) {
-  return phases.value.map(phase => {
+  return phases.value.map((phase, index) => {
     const phaseData = model.phases?.[phase.name];
     let color = 'grey-lighten-2';
     let duration = null;
@@ -501,7 +576,14 @@ function getPhaseTimeline(model) {
         duration = (end - start) / 1000; // seconds
       }
     }
-
+    else {
+      // Se fase mancante e fase precedente COMPLETED
+      const prevPhase = phases.value[index - 1];
+      if (prevPhase && model.phases?.[prevPhase.name]?.status === 'COMPLETED') {
+        color = 'grey';
+      }
+    }
+    
     return { ...phase, color, duration };
   });
 }
@@ -541,6 +623,7 @@ function goTo3DView(model) {
     lastPage: page.value,
     lastItemsPerPage: itemsPerPage.value,
     lastStatusFilter: statusFilter.value,
+    lastEngineFilter: engineFilter.value, // ✨ NUOVO: Salva anche il filtro engine
   });
 
   const routeData = router.resolve({ path: `/model/threejs/${model._id}` });
@@ -567,12 +650,13 @@ async function retry(model) {
 }
 
 onMounted(async () => {
-  const { lastPage, lastItemsPerPage, lastSearch, lastStatusFilter } = getSearchParams();
+  const { lastPage, lastItemsPerPage, lastSearch, lastStatusFilter, lastEngineFilter } = getSearchParams();
   if (lastPage) {
     page.value = lastPage;
     itemsPerPage.value = lastItemsPerPage;
     titleFilter.value = lastSearch || '';
     statusFilter.value = lastStatusFilter || null;
+    engineFilter.value = lastEngineFilter || null; // ✨ NUOVO: Ripristina anche il filtro engine
   }
   
   // Carica i dati
@@ -655,6 +739,10 @@ const isLoggedIn = computed(() => !!token.value)
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.engine-chip {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .quality-chip {

@@ -8,7 +8,8 @@ export const useModelStore = defineStore("model", {
     error: null,
     loading: false, // Stato di caricamento
     titleFilter: '', // Ricerca attiva
-    statusFilter: null, // Aggiungi questo
+    statusFilter: null, // Aggiungi questo,
+    engineFilter: null, // Aggiungi questo
     page: 1, // Pagina attuale
     totalCount: -1,
     pageCount: 1, // Totale delle pagine (per la paginazione)
@@ -225,6 +226,11 @@ export const useModelStore = defineStore("model", {
         // Aggiungi il filtro status se presente
         if (this.statusFilter) {
           params.status = this.statusFilter;
+        }
+        console.log(this.engineFilter)
+        // Aggiungi il filtro status se presente
+        if (this.engineFilter) {
+          params.engine = this.engineFilter;
         }
 
         const response = await getModels(params);

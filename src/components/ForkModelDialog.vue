@@ -114,31 +114,61 @@
                     <v-icon class="mr-2">mdi-tune</v-icon>
                     Training Quality
                   </label>
-                  <v-chip
-                    :color="currentQuality.color"
-                    variant="tonal"
-                    size="small">
-                    <v-icon start size="16">{{ currentQuality.icon }}</v-icon>
-                    {{ currentQuality.label }}
-                  </v-chip>
+                  <div class="d-flex align-center gap-2">
+                    <v-chip
+                      :color="currentQuality.color"
+                      variant="tonal"
+                      size="small">
+                      <v-icon start size="16">{{ currentQuality.icon }}</v-icon>
+                      {{ currentQuality.label }}
+                    </v-chip>
+                    <v-chip
+                      v-if="!isQualityEditable"
+                      color="warning"
+                      variant="outlined"
+                      size="x-small">
+                      <v-icon start size="12">mdi-lock</v-icon>
+                      Original
+                    </v-chip>
+                  </div>
                 </div>
+
+                <!-- Messaggio informativo quando readonly -->
+                <v-alert
+                  v-if="!isQualityEditable"
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                  class="mb-4">
+                  <template v-slot:prepend>
+                    <v-icon size="18">mdi-information-outline</v-icon>
+                  </template>
+                  <div class="text-caption">
+                    Quality setting is locked to original value when changing engine or reusing training phases.
+                    To modify quality, restart from Frame Extraction or keep the same engine.
+                  </div>
+                </v-alert>
 
                 <v-slider
                   v-model="formData.quality_index"
                   :min="0"
                   :max="2"
                   :step="1"
+                  :disabled="!isQualityEditable"
                   show-ticks="always"
                   tick-size="4"
                   track-color="grey-lighten-1"
-                  :track-fill-color="currentQuality.color"
-                  :thumb-color="currentQuality.color"
+                  :track-fill-color="isQualityEditable ? currentQuality.color : 'grey'"
+                  :thumb-color="isQualityEditable ? currentQuality.color : 'grey'"
                   hide-details
-                  class="quality-slider">
+                  class="quality-slider"
+                  :class="{ 'quality-slider--disabled': !isQualityEditable }">
                   <template v-slot:tick-label="{ tick }">
                     <div class="text-center" v-if="qualityLevelOpts[tick]">
                       <v-icon
-                        :color="tick === formData.quality_index ? currentQuality.color : 'grey'"
+                        :color="tick === formData.quality_index 
+                          ? (isQualityEditable ? currentQuality.color : 'grey') 
+                          : 'grey-lighten-1'"
                         size="18"
                         class="mb-1">
                         {{ qualityLevelOpts[tick].icon }}
@@ -270,7 +300,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'reprocessed']);
 
 const modelStore = useModelStore();
-const { saveReprocessingModel ,qualityLevelOpts } = modelStore;
+const { saveReprocessingModel, qualityLevelOpts } = modelStore;
 
 // State
 const valid = ref(false);
@@ -285,8 +315,20 @@ const formData = ref({
   quality_index: 1  // Default: Standard
 });
 
-// Quality Levels Configuration (fix values to match backend enum)
-
+// Computed per determinare se la qualità è modificabile
+const isQualityEditable = computed(() => {
+  // Se non abbiamo un modello sorgente, è modificabile
+  if (!props.sourceModel) return true;
+  
+  // Se la fase scelta è frame_extraction (ripartendo dall'inizio), è sempre modificabile
+  if (formData.value.from_phase === 'frame_extraction') return true;
+  
+  // Se l'engine scelto è uguale a quello originale, è modificabile
+  if (formData.value.engine === props.sourceModel.training_config?.engine) return true;
+  
+  // Altrimenti non è modificabile
+  return false;
+});
 
 // Computed
 const isOpen = computed({
@@ -447,9 +489,9 @@ async function submit() {
 
   loading.value = true;
   try {
-    console.log( props.sourceModel)
-    console.log( formData)
-    const newModel = await saveReprocessingModel (
+    console.log(props.sourceModel)
+    console.log(formData)
+    const newModel = await saveReprocessingModel(
       props.sourceModel._id,
       formData.value.from_phase,
       formData.value.title,
@@ -480,16 +522,60 @@ function cancel() {
   form.value?.resetValidation();
 }
 
+// Watch per gestire il cambio di qualità quando non è modificabile
+watch([() => formData.value.engine, () => formData.value.from_phase], () => {
+  if (!isQualityEditable.value && props.sourceModel?.training_config?.quality_level) {
+    // Trova l'indice della qualità originale
+    const originalQualityIndex = qualityLevelOpts.findIndex(
+      opt => opt.value === props.sourceModel.training_config.quality_level
+    );
+    if (originalQualityIndex !== -1) {
+      formData.value.quality_index = originalQualityIndex;
+    }
+  }
+});
+
 // Watch per aggiornare il titolo quando si apre il dialog
 watch(() => props.sourceModel, (newModel) => {
   if (newModel && isOpen.value) {
     formData.value.title = `${newModel.title} - Reprocessed`;
+    
+    // Imposta l'engine originale
+    if (newModel.training_config?.engine) {
+      formData.value.engine = newModel.training_config.engine;
+    }
+    
+    // Trova e imposta la qualità originale
+    if (newModel.training_config?.quality_level) {
+      const originalQualityIndex = qualityLevelOpts.findIndex(
+        opt => opt.value === newModel.training_config.quality_level
+      );
+      if (originalQualityIndex !== -1) {
+        formData.value.quality_index = originalQualityIndex;
+      }
+    }
   }
 }, { immediate: true });
 
 watch(isOpen, (newValue) => {
   if (newValue && props.sourceModel) {
+    // Inizializza tutti i valori dal modello sorgente
     formData.value.title = `${props.sourceModel.title} - Reprocessed`;
+    
+    // Imposta l'engine originale
+    if (props.sourceModel.training_config?.engine) {
+      formData.value.engine = props.sourceModel.training_config.engine;
+    }
+    
+    // Trova e imposta la qualità originale
+    if (props.sourceModel.training_config?.quality_level) {
+      const originalQualityIndex = qualityLevelOpts.findIndex(
+        opt => opt.value === props.sourceModel.training_config.quality_level
+      );
+      if (originalQualityIndex !== -1) {
+        formData.value.quality_index = originalQualityIndex;
+      }
+    }
   }
 });
 </script>
@@ -506,5 +592,17 @@ watch(isOpen, (newValue) => {
 
 .quality-slider :deep(.v-slider-track__tick--filled) {
   opacity: 1;
+}
+
+.quality-slider--disabled {
+  opacity: 0.7;
+}
+
+.quality-slider--disabled :deep(.v-slider-track__tick) {
+  opacity: 0.3;
+}
+
+.quality-slider--disabled :deep(.v-slider-track__tick--filled) {
+  opacity: 0.5;
 }
 </style>

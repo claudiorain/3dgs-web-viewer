@@ -5,7 +5,7 @@ export const getPresignedUploadUrl = async (filename, contentType) => {
   try {
     const response = await serverApi.post(`/s3/upload-url/`, {
       filename,
-      content_type: contentType,
+      content_type: contentType
     });
     return response.data; // { model_id, upload_url, video_s3_key }
   } catch (error) {
@@ -47,7 +47,7 @@ export const uploadToS3 = async (uploadUrl, file) => {
 };
 
 // Gestisci le chiamate GET per ottenere i modelli
-export const getModels = async ({ page = 1, limit = 10, title = '', status = [] }) => {
+export const getModels = async ({ page = 1, limit = 10, title = '', status = [],engine = [] }) => {
   try {
     const response = await serverApi.get('/models', {
       params: {
@@ -55,6 +55,7 @@ export const getModels = async ({ page = 1, limit = 10, title = '', status = [] 
         limit,
         title,
         status,
+        engine
       },
     });
     return response.data; // Restituisce i dati ricevuti dal backend
