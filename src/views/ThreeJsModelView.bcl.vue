@@ -67,8 +67,14 @@ onMounted(async () => {
     const zip = await JSZip.loadAsync(zipArrayBuffer);
     let camerasData = null;
 
+    let format = 0
     for (const fileName in zip.files) {
-      if (fileName === 'point_cloud.splat') {
+      if (fileName === 'point_cloud.ksplat') {
+        format = 1
+        const plyFileBlob = await zip.files['point_cloud.ksplat'].async('blob');
+        plyUrl.value = URL.createObjectURL(plyFileBlob);
+      }
+      else if(fileName === 'point_cloud.splat') {
         const plyFileBlob = await zip.files['point_cloud.splat'].async('blob');
         plyUrl.value = URL.createObjectURL(plyFileBlob);
       }
@@ -111,12 +117,14 @@ onMounted(async () => {
 
     // Aggiungi la scena dei splat
     await viewer.addSplatScene(plyUrl.value, {
-      'format': 0,
+      'format': format,
       'sphericalHarmonicsDegree': 2,
       'gpuAcceleratedSort': true,
       'splatAlphaRemovalThreshold': 5,
       'position': [0, 1, 0],
-      'rotation': [0, 0, 0, 1]
+      'rotation': [0, 0, 0, 1],
+      'antialiased': true,
+      'logLevel': GaussianSplats3D.LogLevel.Info
     });
 
     numberOfSplat.value = viewer.splatRenderCount;

@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import BabylonJsModelView from '@/views/BabylonJsModelView.vue'
-import ThreeJsModelView from '@/views/ThreeJsModelView.vue'
+import ThreeJsModelView from '@/views/ThreeJsModelView.bcl.vue'
 import { useAuthStore } from '@/stores/authStore';
 
 
